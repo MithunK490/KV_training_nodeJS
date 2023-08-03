@@ -1,63 +1,93 @@
 import express from "express";
+import { Client } from 'pg'
+import { DataSource, FindOptionsWhere, Like } from "typeorm";
+import { SnakeNamingStrategy } from "typeorm-naming-strategies";
 import Employee from "./Employee";
+import dataSource from "./data-source";
 
 const employeeRouter = express.Router();
 let count = 2;
-const employees: Employee[] = [
-    {
-        id: 1,
-        name: "Name1",
-        email: "email1@gmail.com",
-        crteatedAt: new Date(),
-        updatedAt: new Date()
-    },
-    {
-        id: 2,
-        name: "Name2",
-        email: "email2@gmail.com",
-        crteatedAt: new Date(),
-        updatedAt: new Date()
+
+
+employeeRouter.get('/', async (req, res) => {
+    const nameFilter = req.query.name;
+    const emailFilter = req.query.email
+    const employeeRepository = dataSource.getRepository(Employee);
+    
+    // const filters: FindOptionsWhere<Employee> = {};
+    // if(nameFilter){
+    //     filters.name = Like(`${nameFilter}%`);
+    // }
+    // const newEmployee = await employeeRepository.find({
+    //     where: filters
+    // });
+
+    const qb = employeeRepository.createQueryBuilder();
+    if(nameFilter){
+        qb.andWhere("name LIKE :name", {name: `${nameFilter}%`});
     }
-]
+    if(emailFilter){
+        qb.andWhere("email LIKE :email", {email: `%${emailFilter}%`});
+    }
 
-employeeRouter.get('/', (req, res) => {
-    console.log(req.url);
-    res.status(200).send(employees);
+    const newEmployee = await qb.getMany();
+
+    res.status(200).send(newEmployee);
 })
 
-employeeRouter.get('/:id', (req, res) => {
-    console.log(req.url);
-    const id = Number(req.params.id);
-    const employee = employees.find(element => element.id == id);
-    res.status(200).send(employee);
+employeeRouter.get('/:id', async (req, res) => {
+
+    const employeeRepository = dataSource.getRepository(Employee);
+    const newEmployee = await employeeRepository.findOneBy(
+        {
+            id: Number(req.params.id)
+        }
+    );
+
+
+    res.status(200).send(newEmployee);
 })
 
-employeeRouter.post('/', (req, res) => {
-    console.log(req.url);
+employeeRouter.post('/', async (req, res) => {
+
     const newEmployee = new Employee();
     newEmployee.email = req.body.email;
     newEmployee.name = req.body.name;
-    newEmployee.id = ++count;
-    newEmployee.crteatedAt = new Date();
-    newEmployee.updatedAt = new Date();
-    employees.push(newEmployee);
-    res.status(201).send(newEmployee);
+
+
+    const employeeRepository = dataSource.getRepository(Employee);
+    const savedEmployee = await employeeRepository.save(newEmployee)
+
+    res.status(201).send(savedEmployee);
 })
 
-employeeRouter.put('/:id', (req, res) => {
-    console.log(req.url);
-    const employee = employees.find(element => element.id == Number(req.params.id));
-    employee.email = req.body.email;
+employeeRouter.put('/:id', async (req, res) => {
+    const employeeRepository = dataSource.getRepository(Employee);
+    const employee = await employeeRepository.findOneBy(
+        {
+            id: Number(req.params.id)
+        }
+    );
+
     employee.name = req.body.name;
-    employee.updatedAt = new Date();
-    res.status(200).send(employee);
+    employee.email = req.body.email;
+    await employeeRepository.save(employee)
+
+    res.status(201).send(employee);
 })
 
-employeeRouter.delete('/:id', (req, res) => {
-    console.log("employee deleted");
-    const employeeIndexToDelete = employees.findIndex(element => element.id == Number(req.params.id));
-    employees.splice(employeeIndexToDelete, 1);
-    res.status(204).send();
+employeeRouter.delete('/:id', async (req, res) => {
+    const employeeRepository = dataSource.getRepository(Employee);
+    const employee = await employeeRepository.findOneBy(
+        {
+            id: Number(req.params.id)
+        }
+    );
+
+
+    await employeeRepository.softRemove(employee)
+
+    res.status(201).send(employee);
 })
 
 export default employeeRouter;
