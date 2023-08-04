@@ -10,17 +10,28 @@ class EmployeeRepository {
     }
 
     findAllEmployees(): Promise<Employee[]> {
-        return this.employeeRepository.find();
+        return this.employeeRepository.find({
+            relations: {
+                address: true
+            }
+        });
     }
 
     findAnEmployeeById(id: number): Promise<Employee> {
-        return this.employeeRepository.findOneBy({
-            id: id,
+        return this.employeeRepository.findOne({
+            where :{id: id},
+            relations: {
+                address: true
+            }
         });
     }
 
     createEmployee(employee: Employee): Promise<Employee>{
         return this.employeeRepository.save(employee);
+    }
+
+    deleteEmployee(employee: Employee): Promise<Employee>{
+        return this.employeeRepository.softRemove(employee);
     }
 }
 

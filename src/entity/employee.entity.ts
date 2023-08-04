@@ -1,24 +1,20 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import Address from "./address.entity";
+import AbstractEntity from "./abstract-entity";
 
 @Entity("employees")
-class Employee {
-    @PrimaryGeneratedColumn()
-    id: number;
-
+class Employee extends AbstractEntity{
     @Column()
     name: string;
 
     @Column()
     email: String;
 
-    @CreateDateColumn()
-    createdAt: Date;
+    @Column({ nullable: true })
+    age: number
 
-    @UpdateDateColumn()
-    updatedAt: Date;
-
-    @DeleteDateColumn()
-    deletedAt: Date;
+    @OneToOne(() => Address, (address) => address.employee, { cascade: true })
+    address: Address;
 }
 
 export default Employee;
