@@ -26,7 +26,17 @@ class EmployeeRepository {
         });
     }
 
+    findAnEmployeeByEmail(email: string): Promise<Employee> {
+        return this.employeeRepository.findOne({
+            where :{email: email}
+        });
+    }
+
     createEmployee(employee: Employee): Promise<Employee>{
+        return this.employeeRepository.save(employee);
+    }
+
+    updateEmployee(employee: Employee): Promise<Employee>{
         return this.employeeRepository.save(employee);
     }
 

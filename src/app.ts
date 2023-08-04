@@ -1,3 +1,6 @@
+
+import * as dotenv from "dotenv";
+dotenv.config({path:__dirname+'/.env'});
 import "reflect-metadata";
 import express, { Request, Response, NextFunction } from "express";
 import loggerMiddleware from "./middleware/logger.middleware";
