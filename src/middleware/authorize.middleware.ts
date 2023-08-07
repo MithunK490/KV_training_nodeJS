@@ -3,20 +3,22 @@ import express from "express";
 import { Role } from "../utils/role.enum";
 import HttpException from "../exception/http.exception";
 
-const authorize = async (
-    req : RequestWithUser,
-    res: express.Response,
-    next: express.NextFunction
-)=>{
-    try{
-        const role = req.role;
-        if(role !== Role.HR){
-            throw new HttpException(403, "You are not authorized to perform this task");
+const authorize = (role: Role[]) => {
+    return async (
+        req: RequestWithUser,
+        res: express.Response,
+        next: express.NextFunction
+    ) => {
+        try {
+            const role = req.role;
+            if (!role.includes(req.role)) {
+                throw new HttpException(403, "You are not authorized to perform this task");
+            }
+            next();
         }
-        next();
-    }
-    catch(error){
-        next(error);
+        catch (error) {
+            next(error);
+        }
     }
 }
 

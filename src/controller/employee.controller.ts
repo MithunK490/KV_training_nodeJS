@@ -8,6 +8,7 @@ import { validate } from "class-validator";
 import createAddressDto from "../dto/create-address.dto";
 import authenticate from "../middleware/auithentication.middleware";
 import authorize from "../middleware/authorize.middleware";
+import { Role } from "../utils/role.enum";
 
 class EmployeeController {
     public router: express.Router;
@@ -15,11 +16,11 @@ class EmployeeController {
     constructor(private employeeService: EmployeeService) {
         this.router = express.Router();
 
-        this.router.get("/", authenticate, this.getAllEmployees)
-        this.router.get("/:id", this.getAnEmployeeById);
-        this.router.post("/", authenticate, authorize, this.createEmployee);
-        this.router.put("/:id", this.updateEmployee)
-        this.router.delete("/:id", this.deleteEmployee);
+        this.router.get("/", authenticate, authorize([Role.HR, Role.DEVELOPER, Role.UI]), this.getAllEmployees)
+        this.router.get("/:id", authenticate, authorize([Role.HR, Role.DEVELOPER, Role.UI]), this.getAnEmployeeById);
+        this.router.post("/", authenticate, authorize([Role.HR]), this.createEmployee);
+        this.router.put("/:id", authenticate, authorize([Role.HR]), this.updateEmployee)
+        this.router.delete("/:id", authenticate, authorize([Role.HR]), this.deleteEmployee);
         this.router.post("/login", this.loginEmployee);
 
     }
@@ -55,11 +56,7 @@ class EmployeeController {
             }
 
             const employee = await this.employeeService.createEmployee(
-                createEmployeeDto.email,
-                createEmployeeDto.name,
-                createEmployeeDto.address,
-                createEmployeeDto.password,
-                createEmployeeDto.role,
+                createEmployeeDto
             );
             res.status(200).send(employee);
         }
@@ -86,12 +83,9 @@ class EmployeeController {
                 console.log(JSON.stringify(errors));
             }
 
-            const employee = await this.employeeService.createEmployee(
-                updateEmployeeDto.email,
-                updateEmployeeDto.name,
-                updateEmployeeDto.address,
-                updateEmployeeDto.password,
-                updateEmployeeDto.role,
+            const employee = await this.employeeService.updateEmployee(
+                Number(req.params.id),
+                updateEmployeeDto
             );
             res.status(200).send(employee);
         }

@@ -1,6 +1,6 @@
 class MathUtil {
     static average(number1: number, number2: number) {
-        number1 = 5;
+        number1 = 4;
         return this.sum(number1, number2) / 2;
     }
 

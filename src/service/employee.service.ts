@@ -5,9 +5,17 @@ import EmployeeRepository from "../repository/employee.repository";
 import bcrypt, { hash } from "bcrypt";
 import jsonwebtoken from "jsonwebtoken";
 import { Role } from "../utils/role.enum";
+import CreateEmployeeDto from "../dto/create-employee.dto";
+import Department from "../entity/department-entity";
+import DepartmentService from "./department.service";
+import DepartmentRepository from "../repository/department.repository";
+import dataSource from "../db/postgres.db";
 
 class EmployeeService {
-    constructor(private employeeReposiotory: EmployeeRepository) { }
+    constructor(
+        private employeeReposiotory: EmployeeRepository,
+        private departmentService: DepartmentService
+    ) { }
 
     getAllEmployees = async (): Promise<Employee[]> => {
         return this.employeeReposiotory.findAllEmployees();
@@ -21,47 +29,55 @@ class EmployeeService {
         return employee;
     }
 
+    // createEmployeeDto.email,
+    // createEmployeeDto.name,
+    // createEmployeeDto.address,
+    // createEmployeeDto.password,
+    // createEmployeeDto.role,
+
+
+
     createEmployee = async (
-        email: string,
-        name: string,
-        address: Address,
-        password: string,
-        role: Role
+        employeeDto: CreateEmployeeDto
     ): Promise<Employee> => {
         const newAddress = new Address();
-        newAddress.line1 = address.line1;
-        newAddress.pincode = address.pincode;
+        newAddress.line1 = employeeDto.address.line1;
+        newAddress.pincode = employeeDto.address.pincode;
+
+        const newDepartment = await this.departmentService.getDepartmentById(employeeDto.department_id)
 
         const employee = new Employee();
-        employee.name = name;
-        employee.email = email;
+        employee.name = employeeDto.name;
+        employee.email = employeeDto.email;
+        employee.age = employeeDto.age;
         employee.address = newAddress;
-        employee.password = await bcrypt.hash(password, 10);
-        employee.role = role;
+        employee.password = await bcrypt.hash(employeeDto.password, 10);
+        employee.role = employeeDto.role;
+        employee.department = newDepartment
+        employee.department_id = employeeDto.department_id
+        console.log(employee)
         // newAddress.employee = employee;
 
         return this.employeeReposiotory.createEmployee(employee);
     }
 
-    deleteEmployee = async (id: number): Promise<void> => {
+    deleteEmployee = async (id: number): Promise<Employee> => {
         const employee = await this.getAnEmployeeById(id);
-        await this.employeeReposiotory.deleteEmployee(employee);
+        return  await this.employeeReposiotory.deleteEmployee(employee);
     }
 
     updateEmployee = async (
         id: number,
-        email: string,
-        name: string,
-        address: Address,
-        password: string,
-        role: Role
+        employeeDto: CreateEmployeeDto,
     ): Promise<Employee> => {
         const employee = await this.getAnEmployeeById(id)
-        employee.name = name;
-        employee.email = email;
-        employee.address = address;
-        employee.password = await bcrypt.hash(password, 10);
-        employee.role = role;
+        employee.name = employeeDto.name;
+        employee.email = employeeDto.email;
+        employee.address.line1 = employeeDto.address.line1;
+        employee.address.pincode = employeeDto.address.pincode;
+        employee.password = await bcrypt.hash(employeeDto.password, 10);
+        employee.role = employeeDto.role;
+        employee.department_id = employeeDto.department_id;
         // newAddress.employee = employee;
 
         return this.employeeReposiotory.updateEmployee(employee);
